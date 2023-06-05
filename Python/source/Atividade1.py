@@ -30,7 +30,7 @@ Analise o dataset do referido arquivo para responder as seguintes perguntas:
 '''    
 
 df = pd.read_csv("../datasets/historico-alg1_SIGA_ANONIMIZADO.csv", sep = ",", decimal = ".")
-
+df = df[df.tipo!='EQUIVALENCIA']
 df.columns
  
 '''
@@ -44,21 +44,27 @@ df.loc[ df.status=='Reprovado', 'status'] = 'R-nota'
 '''
 1. Qual é a média de nota dos aprovados (no período total e por ano)?
 '''
+df[df.status=="Aprovado"].nota.mean()
 notas_aprov = df[df.status=="Aprovado"].groupby(['ano','periodo']).nota.mean()
 
 '''
 2. Qual é a média de nota dos reprovados por nota (período total e ano)?
 '''
+df[df.status=='R-nota'].nota.mean()
 notas_rep_notas = df[df.status=='R-nota'].groupby(['ano','periodo']).nota.mean()
 
 '''
 3. Qual é a frequência dos reprovados por nota (período total e por ano)?
 '''
+df[df.status=='R-nota'].frequencia.mean()
 freq_rep_notas = df[df.status=='R-nota'].groupby(['ano','periodo']).frequencia.mean()
 
 '''
 4. Qual a porcentagem de evasões (total e anual)?
 '''
+df[df.status=="Cancelado"].status.count()/df.status.count()*100
+
+
 n_evasao = df[df.status=="Cancelado"].groupby(['ano','periodo']).status.count()
 n_total = df.groupby(['ano','periodo']).status.count()
 evasao_perc = n_evasao/n_total*100
@@ -105,23 +111,39 @@ dic={'notas_aprov': "Notas dos aprovados",
      'rep_perc': "Percentual de reprovações",
      'n_total': 'Número total de alunos'}
 
+stats = stats[stats.periodo!='Anual'].reset_index(drop=True)
 
-for i in ['notas_aprov','notas_rep_notas','freq_rep_notas','n_evasao', 'evasao_perc', 'rep_freq', 'rep_nota','rep', 'rep_perc','n_total']:
-    variavel = stats[i]
+
+for col in ['notas_aprov','notas_rep_notas','freq_rep_notas','n_evasao', 'evasao_perc', 'rep_freq', 'rep_nota','rep', 'rep_perc','n_total']:
+    variavel = stats[col].reset_index(drop=True)
     plt.bar(stats.tempo, variavel, width=0.4, color = 'grey', label='Notas aprovadas')
     plt.xlabel('Ano')
-    plt.ylabel(dic[i])
+    plt.ylabel(dic[col])
     plt.xlim([stats.ano.min()-1, stats.ano.max()+1])
-    plt.ylim([0, stats[i].max()*1.05])
+    plt.ylim([0, stats[col].max()*1.05])
     plt.axvline(x=2019.75, color='red', linestyle='--')
     plt.axvline(x=2021.75, color='red', linestyle='--')
-    plt.savefig(f'../img/Atividade1/{i}.png', dpi=300, format='png', bbox_inches='tight', transparent=False)
+    for i in range(len(stats[col])):
+        v = stats[col][i]
+        if pd.isna(v):
+            v = 0
+            a = ""
+        else:
+            a = f'{v:.0f}'
+        x = stats.tempo[i]
+        plt.text(x, v, a, ha='center', va='bottom', fontsize=6)
+    plt.savefig(f'../img/Atividade1/{col}.png', dpi=300, format='png', bbox_inches='tight', transparent=False)
     plt.close()
+    
+    
+    
+   
+
     
 '''
 Conforme pode ser visto nas figuras, a pandemia contribuiu para o aumento do número de evasões,
 especialmente no primeiro semestre de 2020 e de 2021, nos quais ocorreram 17 e 12 evasões, respectivamente.
-O número de reprovados por falta e por nota aumentou no início de 2021, chegando a um total de 55 
+O número de reprovados por falta e por nota aumentou no início de 2021, chegando a um total de 34
 reprovações no ano de 2021.
 
 Conforme figuras geradas no exercício anterior, as reprovações no primeiro período de 2022 foram 
